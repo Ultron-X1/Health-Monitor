@@ -5,8 +5,10 @@ const app = express();
 
 app.use(express.json());
 
+// Serve website
 app.use(express.static(path.join(__dirname, "public")));
 
+// Store latest sensor reading
 let latest = {
     heartRate: 0,
     spo2: 0,
@@ -16,6 +18,7 @@ let latest = {
     status: "NORMAL"
 };
 
+// Store chart history
 let history = {
     labels: [],
     heartRate: [],
@@ -33,6 +36,7 @@ app.post("/data", (req, res) => {
     history.spo2.push(req.body.spo2);
     history.glucose.push(req.body.glucose);
 
+    // Keep only last 20 readings
     if (history.labels.length > 20) {
         history.labels.shift();
         history.heartRate.shift();
@@ -45,12 +49,12 @@ app.post("/data", (req, res) => {
     res.json({ success: true });
 });
 
-// Dashboard gets latest values
+// Dashboard requests latest values
 app.get("/api/latest", (req, res) => {
     res.json(latest);
 });
 
-// Dashboard gets chart history
+// Dashboard requests chart history
 app.get("/api/history", (req, res) => {
     res.json(history);
 });
@@ -60,6 +64,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Railway port
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
