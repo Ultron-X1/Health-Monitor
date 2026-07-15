@@ -321,30 +321,41 @@ document.getElementById("patientFields");
 const doctorFields =
 document.getElementById("doctorFields");
 
+const email = document.getElementById("email");
+const phone = document.getElementById("phone");
+const doctorId = document.getElementById("doctorId");
+const password = document.getElementById("password");
+    
 document
 .querySelectorAll('input[name="loginType"]')
-.forEach(radio=>{
+.forEach(radio => {
 
-radio.addEventListener("change",()=>{
+    radio.addEventListener("change", () => {
 
-if(radio.value==="doctor" && radio.checked){
+        if (radio.value === "doctor" && radio.checked) {
 
-    patientFields.style.display="none";
-    doctorFields.style.display="block";
+            patientFields.style.display = "none";
+            doctorFields.style.display = "block";
 
-    registerBtn.style.display="none";
+            email.required = false;
+            phone.required = false;
 
-}
-else{
+            doctorId.required = true;
+            password.required = true;
 
-    patientFields.style.display="block";
-    doctorFields.style.display="none";
+        } else {
 
-    registerBtn.style.display="block";
+            patientFields.style.display = "block";
+            doctorFields.style.display = "none";
 
-}
+            email.required = true;
+            phone.required = true;
 
-});
+            doctorId.required = false;
+            password.required = false;
+        }
+
+    });
 
 });
 
