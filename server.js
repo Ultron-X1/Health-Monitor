@@ -55,9 +55,13 @@ let history = {
 // ===============================
 // Home Page
 // ===============================
+// Home Page
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "register.html"));
 });
+
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
 
 // ======================================================
 // REGISTER NEW PATIENT
