@@ -164,7 +164,29 @@ app.post("/api/device/connect", (req, res) => {
 });
 
 
+// =====================================
+// GET ALL PATIENTS
+// =====================================
+app.get("/api/users", async (req, res) => {
 
+    try {
+
+        const users = await User.find().sort({ createdAt: -1 });
+
+        res.json(users);
+
+    } catch (err) {
+
+        res.status(500).json({
+
+            success: false,
+            message: err.message
+
+        });
+
+    }
+
+});
 
 // ======================================================
 // RECEIVE SENSOR DATA FROM ESP8266
