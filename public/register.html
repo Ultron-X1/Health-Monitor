@@ -159,15 +159,13 @@
           const j = await r.json();
           spinner.style.display = "none";
           if (r.ok) {
-            msg.innerHTML =
-              '<div class="alert alert-success">Registered successfully. Redirecting...</div>';
+           msg.innerHTML =
+    '<div class="alert alert-success">Registered successfully. Redirecting...</div>';
 
-            setTimeout(() => (location.href = "/dashboard.html"), 1500);
-
-            setTimeout(() => {
+setTimeout(() => {
     window.location.href = "/login.html";
-},1500);
- (Update register page and add login route)
+}, 1500);
+ //(Update register page and add login route)
           } else {
             msg.innerHTML =
               '<div class="alert alert-danger">' +
