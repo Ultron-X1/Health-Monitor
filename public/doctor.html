@@ -63,45 +63,6 @@ Start Monitoring
 <script>
 
 
-async function loadPatients(){
-
-
-let response =
-await fetch("/api/users");
-
-
-let data =
-await response.json();
-
-
-let select =
-document.getElementById("patients");
-
-
-select.innerHTML="";
-
-
-data.users.forEach(user=>{
-
-
-select.innerHTML +=
-
-`
-<option value="${user._id}">
-
-${user.firstName} ${user.lastName}
-
-</option>
-
-`;
-
-
-});
-
-
-}
-
-
 
 async function startMonitoring(){
 
@@ -139,7 +100,7 @@ document.getElementById("message").innerHTML =
 
 
 
-loadPatients();
+
 
 // =======================================
 // LOAD REGISTERED PATIENTS
@@ -147,27 +108,32 @@ loadPatients();
 
 async function loadPatients(){
 
-
 try{
-
 
 const response = await fetch("/api/users");
 
-
 const users = await response.json();
 
+const patientList = document.getElementById("patientList");
+
+const select = document.getElementById("patients");
 
 
-const patientList =
-document.getElementById("patientList");
+patientList.innerHTML = "";
 
-
-
-patientList.innerHTML="";
-
+select.innerHTML = "";
 
 
 users.forEach(user=>{
+
+
+select.innerHTML += `
+
+<option value="${user._id}">
+${user.fullName}
+</option>
+
+`;
 
 
 patientList.innerHTML += `
@@ -178,20 +144,13 @@ patientList.innerHTML += `
 
 <div class="card-body">
 
-
 <h5 class="card-title">
-${user.firstName} ${user.lastName}
+${user.fullName}
 </h5>
 
+<p>Email: ${user.email}</p>
 
-<p>
-Email: ${user.email}
-</p>
-
-
-<p>
-Phone: ${user.phone}
-</p>
+<p>Phone: ${user.phone}</p>
 
 
 <button 
@@ -211,20 +170,20 @@ Connect Device
 
 `;
 
-
 });
 
 
-}
+} // closes try
+
+
 catch(error){
 
 console.log(error);
 
 }
 
-}
 
-
+} // closes loadPatients function
 
 loadPatients();
 
@@ -301,6 +260,7 @@ alert(
 
 }
 
+  
 
 </script>
 
