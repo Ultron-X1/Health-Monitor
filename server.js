@@ -108,6 +108,54 @@ app.post("/api/users", async (req, res) => {
 
 });
 
+// =====================================
+// LOGIN PATIENT
+// =====================================
+app.post("/api/login", async (req, res) => {
+
+    try {
+
+        const { email, phone } = req.body;
+
+        const user = await User.findOne({
+            email,
+            phone
+        });
+
+        if (!user) {
+
+            return res.status(401).json({
+
+                success:false,
+                message:"Invalid Email or Phone Number"
+
+            });
+
+        }
+
+        res.json({
+
+            success:true,
+            message:"Login Successful",
+            user
+
+        });
+
+    }
+
+    catch(err){
+
+        res.status(500).json({
+
+            success:false,
+            message:err.message
+
+        });
+
+    }
+
+});
+
 // ======================================================
 // GET ALL PATIENTS
 // ======================================================
