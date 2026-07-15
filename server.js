@@ -60,9 +60,12 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 
-// Serve static files
-app.use(express.static(path.join(__dirname, "public")));
-
+// ===============================
+// Dashboard Page
+// ===============================
+app.get("/dashboard", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
 // ======================================================
 // REGISTER NEW PATIENT
 // ======================================================
