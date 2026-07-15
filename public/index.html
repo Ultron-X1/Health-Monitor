@@ -1,0 +1,681 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Health Monitor Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:      #0a0e1a;
+    --panel:   #0f1628;
+    --panel2:  #141c2e;
+    --border:  #1e2d4a;
+    --accent:  #00d4ff;
+    --green:   #00dd66;
+    --red:     #ff4466;
+    --yellow:  #ffd700;
+    --orange:  #ff9500;
+    --purple:  #bb88ff;
+    --white:   #e8f0fe;
+    --grey:    #8899b0;
+    --dim:     #3a4a62;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Grid background */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events:none; z-index:0;
+  }
+
+  .wrap { position:relative; z-index:1; max-width:1280px; margin:0 auto; padding:0 20px 40px; }
+
+  /* ── Header ── */
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 0;
+    border-bottom:1px solid var(--border);
+    margin-bottom:28px;
+  }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-icon {
+    width:42px; height:42px; border-radius:10px;
+    background:linear-gradient(135deg, #003344, #006688);
+    border:1px solid var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .logo h1 {
+    font-size:18px; font-weight:700; color:var(--accent);
+    letter-spacing:1px; line-height:1.2;
+  }
+  .logo p { font-size:11px; color:var(--grey); letter-spacing:2px; text-transform:uppercase; }
+
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .status-badge {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 14px; border-radius:20px;
+    background:var(--panel2); border:1px solid var(--border);
+    font-size:12px; font-weight:600;
+  }
+  .status-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--grey); animation:none;
+  }
+  .status-dot.live { background:var(--green); animation:pulse 1.5s infinite; }
+  .status-dot.alert { background:var(--red); animation:pulse 0.6s infinite; }
+  @keyframes pulse {
+    0%,100%{opacity:1;transform:scale(1);}
+    50%{opacity:0.5;transform:scale(1.3);}
+  }
+  #last-update { font-size:11px; color:var(--grey); font-family:'JetBrains Mono',monospace; }
+
+  /* ── Alert banner ── */
+  #alert-banner {
+    display:none;
+    background:linear-gradient(90deg, #1a0a10, #2a0c14);
+    border:1px solid var(--red);
+    border-radius:10px;
+    padding:12px 20px;
+    margin-bottom:20px;
+    display:flex; align-items:center; gap:12px;
+    animation:alertGlow 1s infinite alternate;
+  }
+  #alert-banner.hidden { display:none!important; }
+  @keyframes alertGlow {
+    from { box-shadow:0 0 10px rgba(255,68,102,0.2); }
+    to   { box-shadow:0 0 25px rgba(255,68,102,0.5); }
+  }
+  #alert-banner .alert-icon { font-size:24px; }
+  #alert-banner .alert-text { font-size:14px; font-weight:600; color:var(--red); }
+  #alert-banner .alert-sub  { font-size:11px; color:#aa4455; margin-top:2px; }
+
+  /* ── Reading cards ── */
+  .cards-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap:16px;
+    margin-bottom:24px;
+  }
+
+  .card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+    transition:border-color 0.3s, box-shadow 0.3s;
+  }
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:3px;
+    background:var(--card-color, var(--accent));
+    border-radius:14px 14px 0 0;
+  }
+  .card:hover { border-color:var(--card-color, var(--accent)); }
+
+  .card-icon { font-size:22px; margin-bottom:8px; }
+  .card-label {
+    font-size:11px; font-weight:500;
+    color:var(--grey);
+    text-transform:uppercase; letter-spacing:1.5px;
+    margin-bottom:8px;
+  }
+  .card-value {
+    font-family:'JetBrains Mono', monospace;
+    font-size:32px; font-weight:600;
+    color:var(--white);
+    line-height:1;
+  }
+  .card-unit {
+    font-size:12px; color:var(--grey);
+    margin-top:4px; font-family:'JetBrains Mono',monospace;
+  }
+  .card-range {
+    margin-top:10px;
+    font-size:10px; color:var(--dim);
+    padding:3px 8px;
+    background:var(--panel2);
+    border-radius:6px; display:inline-block;
+  }
+  .card-bar {
+    margin-top:12px;
+    height:4px; border-radius:2px;
+    background:var(--border);
+    overflow:hidden;
+  }
+  .card-bar-fill {
+    height:100%; border-radius:2px;
+    background:var(--card-color, var(--accent));
+    transition:width 1s ease;
+  }
+  .card.abnormal { border-color:var(--red)!important; }
+  .card.abnormal .card-value { color:var(--red); }
+
+  /* Status card */
+  .status-card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+  }
+  .status-indicator {
+    width:64px; height:64px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; margin-bottom:12px;
+    border:2px solid var(--green);
+    background:rgba(0,221,102,0.08);
+  }
+  .status-indicator.alert-mode {
+    border-color:var(--red);
+    background:rgba(255,68,102,0.08);
+    animation:pulse 0.8s infinite;
+  }
+  #status-text { font-size:18px; font-weight:700; color:var(--green); }
+  #status-text.alert-mode { color:var(--red); }
+  #status-sub { font-size:11px; color:var(--grey); margin-top:4px; }
+
+  /* ── Charts ── */
+  .charts-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:24px;
+  }
+  @media(max-width:768px){ .charts-grid{grid-template-columns:1fr;} }
+
+  .chart-card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .chart-title {
+    font-size:13px; font-weight:600;
+    color:var(--white); margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .chart-dot {
+    width:8px; height:8px; border-radius:50%;
+  }
+  canvas { max-height:200px; }
+
+  /* ── Data table ── */
+  .table-card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:24px;
+  }
+  .table-title {
+    font-size:14px; font-weight:600;
+    color:var(--white); margin-bottom:16px;
+  }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    font-size:10px; font-weight:600;
+    color:var(--grey); text-transform:uppercase;
+    letter-spacing:1px; padding:8px 12px;
+    text-align:left; border-bottom:1px solid var(--border);
+  }
+  td {
+    padding:10px 12px; font-size:13px;
+    border-bottom:1px solid rgba(30,45,74,0.4);
+    font-family:'JetBrains Mono',monospace;
+  }
+  tr:last-child td { border-bottom:none; }
+  .td-normal { color:var(--green); font-weight:600; }
+  .td-abnormal { color:var(--red); font-weight:600; }
+  .td-value { color:var(--white); }
+  .td-range { color:var(--grey); font-size:11px; }
+
+  /* ── Footer ── */
+  footer {
+    text-align:center; padding:20px 0;
+    border-top:1px solid var(--border);
+    font-size:11px; color:var(--dim);
+    letter-spacing:1px;
+  }
+
+  /* ── Responsive ── */
+  @media(max-width:600px){
+    .cards-grid{grid-template-columns:1fr 1fr;}
+    .card-value{font-size:26px;}
+    header{flex-direction:column;gap:12px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">💓</div>
+    <div>
+      <h1>IoT Health Monitor</h1>
+      <p>Diabetes &amp; Blood Pressure Dashboard</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-badge">
+      <div class="status-dot" id="conn-dot"></div>
+      <span id="conn-text">Connecting...</span>
+    </div>
+    <span id="last-update">--:--:--</span>
+  </div>
+</header>
+
+<!-- Alert Banner -->
+<div id="alert-banner" class="hidden">
+  <div class="alert-icon">⚠️</div>
+  <div>
+    <div class="alert-text">ABNORMAL READING DETECTED</div>
+    <div class="alert-sub" id="alert-reason">One or more health parameters are outside normal range.</div>
+  </div>
+</div>
+
+<!-- Reading Cards -->
+<div class="cards-grid">
+
+  <div class="card" style="--card-color:#ff4466">
+    <div class="card-icon">❤️</div>
+    <div class="card-label">Heart Rate</div>
+    <div class="card-value" id="hr-val">--</div>
+    <div class="card-unit">BPM</div>
+    <div class="card-range">Normal: 60 – 100 BPM</div>
+    <div class="card-bar"><div class="card-bar-fill" id="hr-bar" style="width:0%;background:#ff4466"></div></div>
+  </div>
+
+  <div class="card" style="--card-color:#3399ff">
+    <div class="card-icon">🫁</div>
+    <div class="card-label">SpO2</div>
+    <div class="card-value" id="spo2-val">--</div>
+    <div class="card-unit">%</div>
+    <div class="card-range">Normal: ≥ 95%</div>
+    <div class="card-bar"><div class="card-bar-fill" id="spo2-bar" style="width:0%;background:#3399ff"></div></div>
+  </div>
+
+  <div class="card" style="--card-color:#ff9500">
+    <div class="card-icon">🩺</div>
+    <div class="card-label">Blood Pressure</div>
+    <div class="card-value" id="bp-val">--/--</div>
+    <div class="card-unit">mmHg (Systolic / Diastolic)</div>
+    <div class="card-range">Normal: &lt;130 / &lt;85 mmHg</div>
+    <div class="card-bar"><div class="card-bar-fill" id="bp-bar" style="width:0%;background:#ff9500"></div></div>
+  </div>
+
+  <div class="card" style="--card-color:#00dd66">
+    <div class="card-icon">🩸</div>
+    <div class="card-label">Blood Glucose</div>
+    <div class="card-value" id="glu-val">--</div>
+    <div class="card-unit">mmol/L (Simulated)</div>
+    <div class="card-range">Normal: 3.9 – 7.8 mmol/L</div>
+    <div class="card-bar"><div class="card-bar-fill" id="glu-bar" style="width:0%;background:#00dd66"></div></div>
+  </div>
+
+  <div class="status-card" style="--card-color:#00dd66">
+    <div class="status-indicator" id="status-icon">✅</div>
+    <div id="status-text">NORMAL</div>
+    <div id="status-sub">All readings within range</div>
+  </div>
+
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-title">
+      <div class="chart-dot" style="background:#ff4466"></div>
+      Heart Rate History
+    </div>
+    <canvas id="hrChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">
+      <div class="chart-dot" style="background:#3399ff"></div>
+      SpO2 History
+    </div>
+    <canvas id="spo2Chart"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">
+      <div class="chart-dot" style="background:#ff9500"></div>
+      Blood Pressure History
+    </div>
+    <canvas id="bpChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">
+      <div class="chart-dot" style="background:#00dd66"></div>
+      Blood Glucose History
+    </div>
+    <canvas id="gluChart"></canvas>
+  </div>
+</div>
+
+<!-- Parameter Reference Table -->
+<div class="table-card">
+  <div class="table-title">📊 Parameter Reference & Current Status</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Current Value</th>
+        <th>Normal Range</th>
+        <th>Source</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Heart Rate</td>
+        <td class="td-value" id="t-hr">-- BPM</td>
+        <td class="td-range">60 – 100 BPM</td>
+        <td class="td-range">MAX30102 (Real)</td>
+        <td class="td-normal" id="t-hr-s">--</td>
+      </tr>
+      <tr>
+        <td>SpO2</td>
+        <td class="td-value" id="t-spo2">-- %</td>
+        <td class="td-range">≥ 95%</td>
+        <td class="td-range">MAX30102 (Real)</td>
+        <td class="td-normal" id="t-spo2-s">--</td>
+      </tr>
+      <tr>
+        <td>Systolic BP</td>
+        <td class="td-value" id="t-sys">-- mmHg</td>
+        <td class="td-range">&lt; 130 mmHg</td>
+        <td class="td-range">Simulated</td>
+        <td class="td-normal" id="t-sys-s">--</td>
+      </tr>
+      <tr>
+        <td>Diastolic BP</td>
+        <td class="td-value" id="t-dia">-- mmHg</td>
+        <td class="td-range">&lt; 85 mmHg</td>
+        <td class="td-range">Simulated</td>
+        <td class="td-normal" id="t-dia-s">--</td>
+      </tr>
+      <tr>
+        <td>Blood Glucose</td>
+        <td class="td-value" id="t-glu">-- mmol/L</td>
+        <td class="td-range">3.9 – 7.8 mmol/L</td>
+        <td class="td-range">Simulated</td>
+        <td class="td-normal" id="t-glu-s">--</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  IoT-Based Health Monitoring System &nbsp;|&nbsp; NodeMCU ESP8266 + MAX30102 &nbsp;|&nbsp;
+  Dashboard auto-refreshes every 3 seconds &nbsp;|&nbsp; Final Year Project
+</footer>
+
+</div>
+
+<script>
+// ── Chart defaults ─────────────────────────────────────────
+Chart.defaults.color = '#8899b0';
+Chart.defaults.font.family = 'JetBrains Mono, monospace';
+Chart.defaults.font.size = 10;
+
+function makeChart(id, label, color, min, max) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label,
+        data: [],
+        borderColor: color,
+        backgroundColor: color + '18',
+        borderWidth: 2,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: { duration: 600 },
+      scales: {
+        x: {
+          grid: { color: '#1e2d4a' },
+          ticks: { maxTicksLimit: 8, maxRotation: 0 }
+        },
+        y: {
+          min, max,
+          grid: { color: '#1e2d4a' },
+          ticks: { maxTicksLimit: 5 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1628',
+          borderColor: color,
+          borderWidth: 1
+        }
+      }
+    }
+  });
+}
+
+// Blood pressure chart has two datasets
+function makeBPChart() {
+  const ctx = document.getElementById('bpChart').getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Systolic',
+          data: [],
+          borderColor: '#ff9500',
+          backgroundColor: '#ff950018',
+          borderWidth: 2, pointRadius: 2, fill: true, tension: 0.4
+        },
+        {
+          label: 'Diastolic',
+          data: [],
+          borderColor: '#ffcc44',
+          backgroundColor: '#ffcc4410',
+          borderWidth: 2, pointRadius: 2, fill: false, tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: { duration: 600 },
+      scales: {
+        x: { grid:{color:'#1e2d4a'}, ticks:{maxTicksLimit:8,maxRotation:0} },
+        y: { min:50, max:180, grid:{color:'#1e2d4a'}, ticks:{maxTicksLimit:5} }
+      },
+      plugins: {
+        legend: { display: true, labels: { color: '#8899b0', boxWidth: 12 } },
+        tooltip: { backgroundColor:'#0f1628', borderColor:'#ff9500', borderWidth:1 }
+      }
+    }
+  });
+}
+
+const hrChart   = makeChart('hrChart',  'BPM',     '#ff4466', 40,  150);
+const spo2Chart = makeChart('spo2Chart','SpO2 %',  '#3399ff', 85,  101);
+const bpChart   = makeBPChart();
+const gluChart  = makeChart('gluChart', 'mmol/L',  '#00dd66', 2,   12);
+
+// ── Update UI ──────────────────────────────────────────────
+function setCard(id, val, isAbnormal) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.closest('.card').classList.toggle('abnormal', isAbnormal);
+}
+
+function statusEl(id, isNormal) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = isNormal ? '✓ Normal' : '✗ Abnormal';
+  el.className   = isNormal ? 'td-normal' : 'td-abnormal';
+}
+
+function updateDashboard(data) {
+  const hr   = data.heartRate;
+  const sp   = data.spo2;
+  const sys  = data.systolicBP;
+  const dia  = data.diastolicBP;
+  const glu  = data.glucose;
+  const stat = data.status;
+
+  const hrOk  = hr === 0 || (hr >= 60 && hr <= 100);
+  const spOk  = sp === 0 || sp >= 95;
+  const sysOk = sys < 130;
+  const diaOk = dia < 85;
+  const gluOk = glu >= 3.9 && glu <= 7.8;
+  const allOk = hrOk && spOk && sysOk && diaOk && gluOk;
+
+  // Cards
+  document.getElementById('hr-val').textContent  = hr > 0 ? hr : '--';
+  document.getElementById('spo2-val').textContent = sp > 0 ? sp : '--';
+  document.getElementById('bp-val').textContent   = `${sys}/${dia}`;
+  document.getElementById('glu-val').textContent  = glu.toFixed(1);
+
+  // Progress bars
+  document.getElementById('hr-bar').style.width   = Math.min((hr/180)*100, 100) + '%';
+  document.getElementById('spo2-bar').style.width = Math.min(sp, 100) + '%';
+  document.getElementById('bp-bar').style.width   = Math.min((sys/180)*100, 100) + '%';
+  document.getElementById('glu-bar').style.width  = Math.min((glu/12)*100, 100) + '%';
+
+  // Card abnormal state
+  setCard('hr-val',   null, !hrOk  && hr > 0);
+  setCard('spo2-val', null, !spOk  && sp > 0);
+  setCard('bp-val',   null, !sysOk || !diaOk);
+  setCard('glu-val',  null, !gluOk);
+
+  // Table
+  document.getElementById('t-hr').textContent   = hr > 0 ? hr + ' BPM' : '-- BPM';
+  document.getElementById('t-spo2').textContent = sp > 0 ? sp + '%' : '--%';
+  document.getElementById('t-sys').textContent  = sys + ' mmHg';
+  document.getElementById('t-dia').textContent  = dia + ' mmHg';
+  document.getElementById('t-glu').textContent  = glu.toFixed(1) + ' mmol/L';
+  statusEl('t-hr-s',   hrOk  || hr === 0);
+  statusEl('t-spo2-s', spOk  || sp === 0);
+  statusEl('t-sys-s',  sysOk);
+  statusEl('t-dia-s',  diaOk);
+  statusEl('t-glu-s',  gluOk);
+
+  // Status card
+  const icon   = document.getElementById('status-icon');
+  const stText = document.getElementById('status-text');
+  const stSub  = document.getElementById('status-sub');
+  icon.textContent   = allOk ? '✅' : '🚨';
+  icon.className     = 'status-indicator' + (allOk ? '' : ' alert-mode');
+  stText.textContent = allOk ? 'NORMAL' : 'ABNORMAL';
+  stText.className   = allOk ? '' : 'alert-mode';
+  stSub.textContent  = allOk
+    ? 'All readings within normal range'
+    : 'One or more readings out of range';
+
+  // Alert banner
+  const banner = document.getElementById('alert-banner');
+  if (!allOk) {
+    banner.classList.remove('hidden');
+    const reasons = [];
+    if (!hrOk && hr>0) reasons.push(`Heart Rate: ${hr} BPM`);
+    if (!spOk && sp>0) reasons.push(`SpO2: ${sp}%`);
+    if (!sysOk) reasons.push(`Systolic BP: ${sys} mmHg`);
+    if (!diaOk) reasons.push(`Diastolic BP: ${dia} mmHg`);
+    if (!gluOk) reasons.push(`Glucose: ${glu.toFixed(1)} mmol/L`);
+    document.getElementById('alert-reason').textContent = 'Abnormal: ' + reasons.join(' | ');
+  } else {
+    banner.classList.add('hidden');
+  }
+
+  // Connection status
+  document.getElementById('conn-dot').className = 'status-dot live';
+  document.getElementById('conn-text').textContent = 'Live';
+  document.getElementById('last-update').textContent =
+    new Date(data.timestamp).toLocaleTimeString();
+}
+
+function updateCharts(history) {
+  const labels = history.labels || [];
+
+  hrChart.data.labels              = labels;
+  hrChart.data.datasets[0].data   = history.heartRate || [];
+  hrChart.update('none');
+
+  spo2Chart.data.labels            = labels;
+  spo2Chart.data.datasets[0].data = history.spo2 || [];
+  spo2Chart.update('none');
+
+  bpChart.data.labels              = labels;
+  bpChart.data.datasets[0].data   = history.systolicBP  || [];
+  bpChart.data.datasets[1].data   = history.diastolicBP || [];
+  bpChart.update('none');
+
+  gluChart.data.labels             = labels;
+  gluChart.data.datasets[0].data  = history.glucose || [];
+  gluChart.update('none');
+}
+
+// ── Poll server ────────────────────────────────────────────
+let retries = 0;
+
+async function poll() {
+  try {
+    const [latestRes, historyRes] = await Promise.all([
+      fetch('/api/latest'),
+      fetch('/api/history')
+    ]);
+    const latest  = await latestRes.json();
+    const history = await historyRes.json();
+    updateDashboard(latest);
+    updateCharts(history);
+    retries = 0;
+  } catch(e) {
+    retries++;
+    if(retries > 3) {
+      document.getElementById('conn-dot').className   = 'status-dot';
+      document.getElementById('conn-text').textContent = 'Reconnecting...';
+    }
+    console.warn('Poll failed:', e.message);
+  }
+}
+
+// Poll every 3 seconds
+poll();
+setInterval(poll, 3000);
+</script>
+</body>
+</html>
