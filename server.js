@@ -56,7 +56,7 @@ let history = {
 // Home Page
 // ===============================
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 
 // ======================================================
