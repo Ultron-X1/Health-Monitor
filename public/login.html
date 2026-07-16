@@ -284,100 +284,93 @@ password.required=false;
 
 });
 
-loginForm.addEventListener("submit",async(e)=>{
+loginForm.addEventListener("submit", async (e) => {
 
-e.preventDefault();
+    e.preventDefault();
 
-spinner.style.display="inline-block";
-message.innerHTML="";
+    spinner.style.display = "inline-block";
+    message.innerHTML = "";
 
-const loginType=document.querySelector('input[name="loginType"]:checked').value;
+    const loginType =
+    document.querySelector('input[name="loginType"]:checked').value;
 
-let data={};
+    let data = {};
 
-if(loginType==="doctor"){
+    if (loginType === "doctor") {
 
-data={
+        data = {
+            loginType: "doctor",
+            doctorId: doctorId.value,
+            password: password.value
+        };
 
-loginType:"doctor",
+    } else {
 
-doctorId:doctorId.value,
-
-password:password.value
-
-};
-
-}
-else{
-
-data={
-
-loginType:"patient",
-
-email:email.value,
-
-phone:phone.value
-
-};
-
-}
-
-try{
-
-const response=await fetch("/api/login",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify(data)
-
-});
-
-const result=await response.json();
-
-spinner.style.display="none";
-
-if(result.success){
-
-message.innerHTML='<div class="alert alert-success">Login Successful...</div>';
-if(result.success){
-
-    message.innerHTML =
-    '<div class="alert alert-success">Login Successful...</div>';
-
-    if(result.role==="doctor"){
-
-        setTimeout(()=>{
-
-            window.location.href="/doctor.html";
-
-        },1000);
-
-    }
-    else{
-
-        localStorage.setItem("userId", result.user._id);
-        localStorage.setItem("userName", result.user.fullName);
-
-        setTimeout(()=>{
-
-            window.location.href="/dashboard.html";
-
-        },1000);
+        data = {
+            loginType: "patient",
+            email: email.value,
+            phone: phone.value
+        };
 
     }
 
-}
-catch(err){
+    try {
 
-spinner.style.display="none";
+        const response = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-message.innerHTML='<div class="alert alert-danger">Server Connection Error</div>';
+        const result = await response.json();
 
-}
+        spinner.style.display = "none";
+
+        if (result.success) {
+
+            message.innerHTML =
+            '<div class="alert alert-success">Login Successful...</div>';
+
+            if (result.role === "doctor") {
+
+                setTimeout(() => {
+
+                    window.location.href = "/doctor.html";
+
+                }, 1000);
+
+            } else {
+
+                localStorage.setItem("userId", result.user._id);
+                localStorage.setItem("userName", result.user.fullName);
+
+                setTimeout(() => {
+
+                    window.location.href = "/dashboard.html";
+
+                }, 1000);
+
+            }
+
+        } else {
+
+            message.innerHTML =
+            `<div class="alert alert-danger">${result.message}</div>`;
+
+        }
+
+    } catch (err) {
+
+        spinner.style.display = "none";
+
+        message.innerHTML =
+        '<div class="alert alert-danger">Server Connection Error</div>';
+
+        console.log(err);
+
+    }
 
 });
 
