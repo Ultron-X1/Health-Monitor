@@ -166,13 +166,16 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ===============================
-// Get Patients
+// Get Active Patients Only
 // ===============================
 app.get("/api/users", async (req, res) => {
 
     try {
 
-        const users = await User.find().sort({ createdAt: -1 });
+        const users = await User.find({
+            active: true
+        }).sort({ createdAt: -1 });
+
 
         res.json(users);
 
