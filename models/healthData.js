@@ -1,48 +1,15 @@
 const mongoose = require("mongoose");
 
-
-const healthSchema = new mongoose.Schema({
-
-    userId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
-        required:true
-    },
-
-    heartRate:{
-        type:Number
-    },
-
-    spo2:{
-        type:Number
-    },
-
-    systolicBP:{
-        type:Number
-    },
-
-    diastolicBP:{
-        type:Number
-    },
-
-    glucose:{
-        type:Number
-    },
-
-    status:{
-        type:String
-    },
-
-
-    createdAt:{
-        type:Date,
-        default:Date.now
-    }
-
+const healthDataSchema = new mongoose.Schema({
+    userId: String,
+    heartRate: Number,
+    spo2: Number,
+    systolicBP: Number,
+    diastolicBP: Number,
+    glucose: Number,
+    status: String
+}, {
+    timestamps: true
 });
 
-
-module.exports = mongoose.model(
-    "HealthData",
-    healthSchema
-);
+module.exports = mongoose.model("HealthData", healthDataSchema);
