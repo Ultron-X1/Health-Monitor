@@ -40,7 +40,9 @@ app.delete("/api/users/:id", async (req, res) => {
 
     try {
 
-        await User.findByIdAndDelete(req.params.id);
+        await User.findByIdAndUpdate(req.params.id, {
+            active: false
+        });
 
         res.json({
             success: true
@@ -50,13 +52,12 @@ app.delete("/api/users/:id", async (req, res) => {
 
         res.json({
             success: false,
-            message: "Unable to delete patient"
+            message: "Unable to remove patient"
         });
 
     }
 
 });
-
 // ===============================
 // Register Patient
 // ===============================
