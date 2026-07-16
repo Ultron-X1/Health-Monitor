@@ -188,6 +188,64 @@ app.get("/api/users", async (req, res) => {
 
 });
 
+// =====================================
+// REGISTER NEW PATIENT
+// =====================================
+app.post("/api/users", async (req, res) => {
+
+    try {
+
+        const {
+            fullName,
+            age,
+            gender,
+            email,
+            phone,
+            address,
+            emergencyContact,
+            medicalCondition
+        } = req.body;
+
+        // Check if email already exists
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already registered"
+            });
+        }
+
+        const user = new User({
+            fullName,
+            age,
+            gender,
+            email,
+            phone,
+            address,
+            emergencyContact,
+            medicalCondition
+        });
+
+        await user.save();
+
+        res.status(201).json({
+            success: true,
+            message: "Registration Successful",
+            user
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
 // ======================================================
 // RECEIVE SENSOR DATA FROM ESP8266
 // ======================================================
