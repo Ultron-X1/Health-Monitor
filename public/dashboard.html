@@ -283,6 +283,9 @@
 <div>
 
 <h1 id="patientName">Loading...</h1>
+  <button id="logoutBtn" class="btn btn-danger">
+Logout
+</button>
 
 <p>Patient Health Dashboard</p>
 
@@ -740,6 +743,14 @@ document.getElementById("patientName").textContent =
     patientName || "Unknown Patient";
 
 }
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+
+    localStorage.clear();
+
+    window.location.href = "/login.html";
+
+});
 // Poll every 3 seconds
 poll();
 setInterval(poll, 3000);
