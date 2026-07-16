@@ -115,38 +115,25 @@ app.post("/api/login", async (req, res) => {
         }
 
         // Patient Login
-        const { email, phone } = req.body;
+        // Patient Login
+const { email, phone } = req.body;
 
-        const user = await User.findOne({
-            email,
-            phone
-        });
+console.log("Email received:", email);
+console.log("Phone received:", phone);
 
-        if (!user) {
-
-            return res.status(401).json({
-                success: false,
-                message: "Invalid Email or Phone Number"
-            });
-
-        }
-
-        res.json({
-            success: true,
-            role: "patient",
-            user
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    }
-
+const user = await User.findOne({
+    email,
+    phone
 });
+
+console.log("User found:", user);
+
+if (!user) {
+    return res.status(401).json({
+        success: false,
+        message: "Invalid Email or Phone Number"
+    });
+}
 
 app.post("/api/device/connect", (req, res) => {
 
