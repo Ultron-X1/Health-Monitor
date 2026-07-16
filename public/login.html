@@ -343,35 +343,32 @@ spinner.style.display="none";
 if(result.success){
 
 message.innerHTML='<div class="alert alert-success">Login Successful...</div>';
+if(result.success){
 
-if(result.role==="doctor"){
+    message.innerHTML =
+    '<div class="alert alert-success">Login Successful...</div>';
 
-setTimeout(()=>{
+    if(result.role==="doctor"){
 
-window.location.href="/doctor.html";
+        setTimeout(()=>{
 
-},1000);
+            window.location.href="/doctor.html";
 
-}
-else{
+        },1000);
 
-localStorage.setItem("userId",result.user._id);
-localStorage.setItem("userName",result.user.fullName);
+    }
+    else{
 
-setTimeout(()=>{
+        localStorage.setItem("userId", result.user._id);
+        localStorage.setItem("userName", result.user.fullName);
 
-window.location.href="/dashboard.html";
+        setTimeout(()=>{
 
-},1000);
+            window.location.href="/dashboard.html";
 
-}
+        },1000);
 
-}
-else{
-
-message.innerHTML='<div class="alert alert-danger">'+result.message+'</div>';
-
-}
+    }
 
 }
 catch(err){
