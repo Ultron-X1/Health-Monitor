@@ -734,11 +734,10 @@ async function poll() {
 
 };
 
-  const patientName = localStorage.getItem("fullName");
+  const patientName = localStorage.getItem("userName");
 
-if(patientName){
-
-    document.getElementById("patientName").textContent = patientName;
+document.getElementById("patientName").textContent =
+    patientName || "Unknown Patient";
 
 }
 // Poll every 3 seconds
