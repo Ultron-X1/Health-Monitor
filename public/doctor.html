@@ -53,38 +53,52 @@ Start Monitoring
 // LOGOUT
 // ============================
 
-function logout(){
-
+function logout() {
     localStorage.clear();
-
-    window.location.href="/login.html";
-
+    window.location.href = "/login.html";
 }
 
 // ============================
 // START MONITORING
 // ============================
 
-async function startMonitoring(){
+async function startMonitoring() {
 
-    let patientId=document.getElementById("patients").value;
+    const patientId = document.getElementById("patients").value;
 
-    await fetch("/api/device/connect",{
+    try {
 
-        method:"POST",
+        const response = await fetch("/api/device/connect", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                userId: patientId
+            })
+        });
 
-        headers:{
-            "Content-Type":"application/json"
-        },
+        const result = await response.json();
 
-        body:JSON.stringify({
-            userId:patientId
-        })
+        if(result.success){
 
-    });
+            document.getElementById("message").innerHTML =
+            "<span class='text-success'>Patient connected successfully.</span>";
 
-    document.getElementById("message").innerHTML=
-    "<span class='text-success'>Patient connected successfully.</span>";
+        }else{
+
+            document.getElementById("message").innerHTML =
+            "<span class='text-danger'>Unable to connect patient.</span>";
+
+        }
+
+    } catch (err) {
+
+        console.log(err);
+
+        alert("Server Error");
+
+    }
 
 }
 
@@ -92,80 +106,78 @@ async function startMonitoring(){
 // LOAD PATIENTS
 // ============================
 
-async function loadPatients(){
+async function loadPatients() {
 
-try{
+    try {
 
-const response=await fetch("/api/users");
+        const response = await fetch("/api/users");
+        const users = await response.json();
 
-const users=await response.json();
+        const patientList = document.getElementById("patientList");
+        const select = document.getElementById("patients");
 
-const patientList=document.getElementById("patientList");
+        patientList.innerHTML = "";
+        select.innerHTML = "";
 
-const select=document.getElementById("patients");
+        users.forEach(user => {
 
-patientList.innerHTML="";
-select.innerHTML="";
+            select.innerHTML += `
+                <option value="${user._id}">
+                    ${user.fullName}
+                </option>
+            `;
 
-users.forEach(user=>{
+            patientList.innerHTML += `
 
-select.innerHTML+=`
+            <div class="col-md-4 mb-3">
 
-<option value="${user._id}">
-${user.fullName}
-</option>
+                <div class="card shadow">
 
-`;
+                    <div class="card-body">
 
-patientList.innerHTML+=`
+                        <h5>${user.fullName}</h5>
 
-<div class="col-md-4 mb-3">
+                        <p><strong>Email:</strong> ${user.email}</p>
 
-<div class="card shadow">
+                        <p><strong>Phone:</strong> ${user.phone}</p>
 
-<div class="card-body">
+                        <div class="d-grid gap-2">
 
-<h5>${user.fullName}</h5>
+                            <button
+                            class="btn btn-primary"
+                            onclick="connectDevice('${user._id}')">
 
-<p><strong>Email:</strong> ${user.email}</p>
+                                Connect Device
 
-<p><strong>Phone:</strong> ${user.phone}</p>
+                            </button>
 
-<div class="d-flex gap-2">
+                            <button
+                            class="btn btn-danger"
+                            onclick="removePatient('${user._id}')">
 
-<button
-class="btn btn-primary btn-sm"
-onclick="connectDevice('${user._id}')">
+                                Remove User
 
-Connect Device
+                            </button>
 
-</button>
+                        </div>
 
-<button
-class="btn btn-danger btn-sm"
-onclick="removePatient('${user._id}')">
+                    </div>
 
-Remove
+                </div>
 
-</button>
+            </div>
 
-</div>
+            `;
 
-</div>
+        });
 
-</div>
+    } catch (error) {
 
-</div>
+        console.log(error);
 
-`;
+        alert("Unable to load patients.");
 
-});
-
-}catch(error){
-
-console.log(error);
-
-}
+    }
 
 }
 
@@ -177,41 +189,43 @@ loadPatients();
 
 async function connectDevice(userId){
 
-try{
+    document.getElementById("patients").value = userId;
 
-const response=await fetch("/api/device/connect",{
+    try{
 
-method:"POST",
+        const response = await fetch("/api/device/connect",{
 
-headers:{
-"Content-Type":"application/json"
-},
+            method:"POST",
 
-body:JSON.stringify({
-userId:userId
-})
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-});
+            body:JSON.stringify({
+                userId:userId
+            })
 
-const result=await response.json();
+        });
 
-if(result.success){
+        const result = await response.json();
 
-alert("Device connected successfully.");
+        if(result.success){
 
-}else{
+            alert("Device connected successfully.");
 
-alert("Unable to connect device.");
+        }else{
 
-}
+            alert("Unable to connect device.");
 
-}catch(error){
+        }
 
-console.log(error);
+    }catch(error){
 
-alert("Server connection error.");
+        console.log(error);
 
-}
+        alert("Server connection error.");
+
+    }
 
 }
 
@@ -221,45 +235,41 @@ alert("Server connection error.");
 
 async function removePatient(userId){
 
-if(!confirm("Are you sure you want to remove this patient?")){
+    if(!confirm("Are you sure you want to remove this patient?")){
+        return;
+    }
 
-return;
+    try{
 
-}
+        const response = await fetch(`/api/users/${userId}`,{
+            method:"DELETE"
+        });
 
-try{
+        const result = await response.json();
 
-const response=await fetch(`/api/users/${userId}`,{
+        if(result.success){
 
-method:"DELETE"
+            alert("Patient removed successfully.");
 
-});
+            loadPatients();
 
-const result=await response.json();
+        }else{
 
-if(result.success){
+            alert(result.message || "Unable to remove patient.");
 
-alert("Patient removed successfully.");
+        }
 
-loadPatients();
+    }catch(error){
 
-}else{
+        console.log(error);
 
-alert(result.message);
+        alert("Server connection error.");
 
-}
-
-}catch(error){
-
-console.log(error);
-
-alert("Server connection error.");
-
-}
+    }
 
 }
 
 </script>
 
 </body>
-</html>
+</html> 
