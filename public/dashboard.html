@@ -282,12 +282,10 @@
 
 <div>
 
-<h1 id="patientName">Loading...</h1>
-  <button id="logoutBtn" class="btn btn-danger">
-Logout
-</button>
+<span id="patientName"></span>
 
 <p>Patient Health Dashboard</p>
+  <span id="todayDate"></span>
 
 </div>
 
@@ -451,6 +449,19 @@ Logout
 </div>
 
 <script>
+
+  const patientName = localStorage.getItem("userName");
+
+if(patientName){
+
+    document.getElementById("patientName").innerHTML = patientName;
+
+}
+
+  const today = new Date();
+
+document.getElementById("todayDate").innerHTML =
+today.toLocaleDateString();
 // ── Chart defaults ─────────────────────────────────────────
 Chart.defaults.color = '#8899b0';
 Chart.defaults.font.family = 'JetBrains Mono, monospace';
