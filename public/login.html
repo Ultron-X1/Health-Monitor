@@ -242,138 +242,260 @@ Register Patient
 
 <script>
 
-const patientFields=document.getElementById("patientFields");
-const doctorFields=document.getElementById("doctorFields");
+const loginForm = document.getElementById("loginForm");
 
-const email=document.getElementById("email");
-const phone=document.getElementById("phone");
+const patientFields = document.getElementById("patientFields");
+const doctorFields = document.getElementById("doctorFields");
 
-const doctorId=document.getElementById("doctorId");
-const password=document.getElementById("password");
+const email = document.getElementById("email");
+const phone = document.getElementById("phone");
 
-document.querySelectorAll('input[name="loginType"]').forEach(r=>{
+const doctorId = document.getElementById("doctorId");
+const password = document.getElementById("password");
 
-r.addEventListener("change",()=>{
+const spinner = document.getElementById("spinner");
+const message = document.getElementById("message");
 
-if(r.checked && r.value==="doctor"){
 
-patientFields.style.display="none";
-doctorFields.style.display="block";
+// ================================
+// SWITCH LOGIN TYPE
+// ================================
 
-email.required=false;
-phone.required=false;
+document.querySelectorAll('input[name="loginType"]').forEach(input => {
 
-doctorId.required=true;
-password.required=true;
+    input.addEventListener("change", () => {
 
-}
-else{
+        const type = document.querySelector(
+            'input[name="loginType"]:checked'
+        ).value;
 
-patientFields.style.display="block";
-doctorFields.style.display="none";
 
-email.required=true;
-phone.required=true;
+        if(type === "doctor"){
 
-doctorId.required=false;
-password.required=false;
+            patientFields.style.display = "none";
+            doctorFields.style.display = "block";
 
-}
 
-});
+            email.required = false;
+            phone.required = false;
 
-});
+            doctorId.required = true;
+            password.required = true;
 
-loginForm.addEventListener("submit", async (e) => {
 
-    e.preventDefault();
+        }else{
 
-    spinner.style.display = "inline-block";
-    message.innerHTML = "";
+            patientFields.style.display = "block";
+            doctorFields.style.display = "none";
 
-    const loginType =
-    document.querySelector('input[name="loginType"]:checked').value;
 
-    let data = {};
+            email.required = true;
+            phone.required = true;
 
-    if (loginType === "doctor") {
-
-        data = {
-            loginType: "doctor",
-            doctorId: doctorId.value,
-            password: password.value
-        };
-
-    } else {
-
-        data = {
-            loginType: "patient",
-            email: email.value,
-            phone: phone.value
-        };
-
-    }
-
-    try {
-
-        const response = await fetch("/api/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        spinner.style.display = "none";
-
-        if (result.success) {
-
-            message.innerHTML =
-            '<div class="alert alert-success">Login Successful...</div>';
-
-            if (result.role === "doctor") {
-
-                setTimeout(() => {
-
-                    window.location.href = "/doctor.html";
-
-                }, 1000);
-
-            } else {
-
-                localStorage.setItem("userId", result.user._id);
-                localStorage.setItem("userName", result.user.fullName);
-
-                setTimeout(() => {
-
-                    window.location.href = "/dashboard.html";
-
-                }, 1000);
-
-            }
-
-        } else {
-
-            message.innerHTML =
-            `<div class="alert alert-danger">${result.message}</div>`;
+            doctorId.required = false;
+            password.required = false;
 
         }
 
-    } catch (err) {
-
-        spinner.style.display = "none";
-
-        message.innerHTML =
-        '<div class="alert alert-danger">Server Connection Error</div>';
-
-        console.log(err);
-
-    }
+    });
 
 });
 
+
+
+// ================================
+// LOGIN
+// ================================
+
+loginForm.addEventListener("submit", async (e)=>{
+
+    e.preventDefault();
+
+
+    spinner.style.display="inline-block";
+
+    message.innerHTML="";
+
+
+    const loginType =
+    document.querySelector(
+        'input[name="loginType"]:checked'
+    ).value;
+
+
+
+    let loginData;
+
+
+
+    if(loginType==="doctor"){
+
+
+        loginData={
+
+            loginType:"doctor",
+
+            doctorId:doctorId.value,
+
+            password:password.value
+
+        };
+
+
+    }else{
+
+
+        loginData={
+
+            loginType:"patient",
+
+            email:email.value,
+
+            phone:phone.value
+
+        };
+
+
+    }
+
+
+
+    try{
+
+
+        const response = await fetch("/api/login",{
+
+            method:"POST",
+
+            headers:{
+
+                "Content-Type":"application/json"
+
+            },
+
+            body:JSON.stringify(loginData)
+
+        });
+
+
+
+        const result = await response.json();
+
+
+
+        spinner.style.display="none";
+
+
+
+        if(result.success){
+
+
+
+            message.innerHTML=`
+
+            <div class="alert alert-success">
+
+            Login Successful
+
+            </div>
+
+            `;
+
+
+
+            // Doctor redirect
+
+            if(result.role==="doctor"){
+
+
+
+                setTimeout(()=>{
+
+                    window.location.href="/doctor.html";
+
+                },1000);
+
+
+
+            }
+
+
+
+            // Patient redirect
+
+            else {
+
+
+
+                localStorage.setItem(
+                    "userId",
+                    result.user._id
+                );
+
+
+                localStorage.setItem(
+                    "userName",
+                    result.user.fullName
+                );
+
+
+
+                setTimeout(()=>{
+
+                    window.location.href="/dashboard.html";
+
+                },1000);
+
+
+
+            }
+
+
+
+        }else{
+
+
+
+            message.innerHTML=`
+
+            <div class="alert alert-danger">
+
+            ${result.message}
+
+            </div>
+
+            `;
+
+
+        }
+
+
+
+    }catch(error){
+
+
+
+        spinner.style.display="none";
+
+
+        message.innerHTML=`
+
+        <div class="alert alert-danger">
+
+        Server Connection Error
+
+        </div>
+
+        `;
+
+
+        console.log(error);
+
+
+    }
+
+
+});
    
 </script>
 
