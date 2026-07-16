@@ -136,60 +136,66 @@
 </div>
     </div>
     
-    <script>
-      registerForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        spinner.style.display = "inline-block";
-        const d = {
-          fullName: fullName.value,
-          age: Number(age.value),
-          gender: gender.value,
-          email: email.value,
-          phone: phone.value,
-          address: address.value,
-          emergencyContact: emergencyContact.value,
-          medicalCondition: medicalCondition.value,
-        };
-        
-       
-    } catch (error) {
+   <script>
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
 
-        res.status(500).json({
-            success: false,
-            message: error.message
+    e.preventDefault();
+
+    document.getElementById("spinner").style.display = "inline-block";
+
+    const d = {
+        fullName: document.getElementById("fullName").value,
+        age: Number(document.getElementById("age").value),
+        gender: document.getElementById("gender").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        emergencyContact: document.getElementById("emergencyContact").value,
+        medicalCondition: document.getElementById("medicalCondition").value
+    };
+
+    try {
+
+        const r = await fetch("/api/users", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(d)
         });
+
+        const j = await r.json();
+
+        document.getElementById("spinner").style.display = "none";
+
+        if (r.ok) {
+
+            document.getElementById("msg").innerHTML =
+                '<div class="alert alert-success">Registered successfully. Redirecting...</div>';
+
+            setTimeout(() => {
+                window.location.href = "/login.html";
+            }, 1500);
+
+        } else {
+
+            document.getElementById("msg").innerHTML =
+                `<div class="alert alert-danger">${j.message}</div>`;
+
+        }
+
+    } catch (err) {
+
+        document.getElementById("spinner").style.display = "none";
+
+        document.getElementById("msg").innerHTML =
+            '<div class="alert alert-danger">Server error.</div>';
+
+        console.log(err);
 
     }
 
 });
-        
-        try {
-          const r = await fetch("/api/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(d),
-          });
-          const j = await r.json();
-          spinner.style.display = "none";
-          if (r.ok) {
-           msg.innerHTML =
-    '<div class="alert alert-success">Registered successfully. Redirecting...</div>';
-
-setTimeout(() => {
-    window.location.href = "/login.html";
-}, 1500);
- //(Update register page and add login route)
-          } else {
-            msg.innerHTML =
-              '<div class="alert alert-danger">' +
-              (j.message || "Failed") +
-              "</div>";
-          }
-        } catch (err) {
-          spinner.style.display = "none";
-          msg.innerHTML = '<div class="alert alert-danger">Server error.</div>';
-        }
-      });
-    </script>
+</script>
   </body>
 </html>
