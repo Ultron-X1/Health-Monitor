@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Select Patient</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+
+<body class="bg-light">
+
+
+<div class="container mt-5">
+
+<h2>
+Patient Monitoring Control
+</h2>
+
+<!-- Patient Management Section -->
+
+<div class="container mt-4">
+
+<h2 class="mb-4">
+Registered Patients
+</h2>
+
+
+<div id="patientList" class="row">
+
+<!-- Patients will load here -->
+
+</div>
+
+
+</div>
+
+<select id="patients" class="form-control mt-3">
+
+<option>
+Loading patients...
+</option>
+
+</select>
+
+
+<button 
+class="btn btn-primary mt-3"
+onclick="startMonitoring()">
+
+Start Monitoring
+
+</button>
+
+
+<p id="message"></p>
+
+
+</div>
+
+
+
+<script>
+
+
+async function loadPatients(){
+
+
+let response =
+await fetch("/api/users");
+
+
+let data =
+await response.json();
+
+
+let select =
+document.getElementById("patients");
+
+
+select.innerHTML="";
+
+
+data.users.forEach(user=>{
+
+
+select.innerHTML +=
+
+`
+<option value="${user._id}">
+
+${user.firstName} ${user.lastName}
+
+</option>
+
+`;
+
+
+});
+
+
+}
+
+
+
+async function startMonitoring(){
+
+
+let patientId =
+document.getElementById("patients").value;
+
+
+
+await fetch("/api/device/connect",
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+userId:patientId
+
+})
+
+
+});
+
+
+
+document.getElementById("message").innerHTML =
+"Patient connected to monitor";
+
+
+}
+
+
+
+loadPatients();
+
+// =======================================
+// LOAD REGISTERED PATIENTS
+// =======================================
+
+async function loadPatients(){
+
+
+try{
+
+
+const response = await fetch("/api/users");
+
+
+const users = await response.json();
+
+
+
+const patientList =
+document.getElementById("patientList");
+
+
+
+patientList.innerHTML="";
+
+
+
+users.forEach(user=>{
+
+
+patientList.innerHTML += `
+
+<div class="col-md-4 mb-3">
+
+<div class="card shadow">
+
+<div class="card-body">
+
+
+<h5 class="card-title">
+${user.firstName} ${user.lastName}
+</h5>
+
+
+<p>
+Email: ${user.email}
+</p>
+
+
+<p>
+Phone: ${user.phone}
+</p>
+
+
+<button 
+class="btn btn-primary"
+onclick="connectDevice('${user._id}')">
+
+Connect Device
+
+</button>
+
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+}
+
+}
+
+
+
+loadPatients();
+
+async function connectDevice(userId){
+
+
+try{
+
+
+const response = await fetch(
+"/api/device/connect",
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":"application/json"
+
+},
+
+body:JSON.stringify({
+
+userId:userId
+
+})
+
+}
+
+);
+
+
+
+const result = await response.json();
+
+
+
+if(result.success){
+
+
+alert(
+"Device connected successfully"
+);
+
+
+}
+
+else{
+
+
+alert(
+"Unable to connect device"
+);
+
+
+}
+
+
+}
+
+catch(error){
+
+
+console.log(error);
+
+
+alert(
+"Server connection error"
+);
+
+
+}
+
+
+}
+
+
+</script>
+
+
+</body>
+</html>

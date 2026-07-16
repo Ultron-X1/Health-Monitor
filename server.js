@@ -1,15 +1,27 @@
+require("dotenv").config();
+
+console.log(process.env.MONGODB_URI);
+
 const express = require("express");
+
 const mongoose = require("mongoose");
 const path = require("path");
 
+
+
+
 // Import User Model
+let currentPatient = null;
 const User = require("./models/user");
+const HealthData = require("./models/healthData");
 
 const app = express();
+
 
 // ===============================
 // MongoDB Connection
 // ===============================
+console.log(process.env.MONGODB_URI);
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => {
     console.log("✅ MongoDB Connected");
@@ -66,55 +78,43 @@ app.get("/", (req, res) => {
 app.get("/dashboard", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
-// ======================================================
-// REGISTER NEW PATIENT
-// ======================================================
-app.post("/api/users", async (req, res) => {
 
-    try {
 
-        const user = new User({
-
-    fullName: req.body.fullName,
-    age: req.body.age,
-    gender: req.body.gender,
-    email: req.body.email,
-    phone: req.body.phone,
-    address: req.body.address,
-    emergencyContact: req.body.emergencyContact,
-    medicalCondition: req.body.medicalCondition
-
-});
-        await user.save();
-
-        res.status(201).json({
-
-            success: true,
-            message: "Patient Registered Successfully",
-            user
-
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-
-            success: false,
-            message: error.message
-
-        });
-
-    }
-
-});
 
 // =====================================
-// LOGIN PATIENT
+// LOGIN (Doctor & Patient)
 // =====================================
 app.post("/api/login", async (req, res) => {
 
     try {
 
+        console.log(req.body);   // <-- ADD THIS HERE
+
+        const { loginType } = req.body;
+
+        // Doctor Login
+        if (loginType === "doctor") {
+
+            if (
+                req.body.doctorId === "DOCTOR001" &&
+                req.body.password === "Admin123"
+            ) {
+
+                return res.json({
+                    success: true,
+                    role: "doctor"
+                });
+
+            }
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Doctor ID or Password"
+            });
+
+        }
+
+        // Patient Login
         const { email, phone } = req.body;
 
         const user = await User.findOne({
@@ -125,126 +125,134 @@ app.post("/api/login", async (req, res) => {
         if (!user) {
 
             return res.status(401).json({
-
-                success:false,
-                message:"Invalid Email or Phone Number"
-
+                success: false,
+                message: "Invalid Email or Phone Number"
             });
 
         }
 
         res.json({
-
-            success:true,
-            message:"Login Successful",
+            success: true,
+            role: "patient",
             user
-
         });
 
-    }
-
-    catch(err){
+    } catch (err) {
 
         res.status(500).json({
-
-            success:false,
-            message:err.message
-
-        });
-
-    }
-
-});
-
-// ======================================================
-// GET ALL PATIENTS
-// ======================================================
-app.get("/api/users", async (req, res) => {
-
-    try {
-
-        const users = await User.find().sort({ createdAt: -1 });
-
-        res.json(users);
-
-    } catch (error) {
-
-        res.status(500).json({
-
             success: false,
-            message: error.message
-
+            message: err.message
         });
 
     }
 
 });
 
-// ======================================================
-// RECEIVE SENSOR DATA FROM ESP8266
-// ======================================================
-app.post("/data", (req, res) => {
+app.post("/api/device/connect", (req, res) => {
 
-    console.log("Received Sensor Data:");
+    const { userId } = req.body;
 
-    console.log(req.body);
+    currentPatient = userId;
 
-    latest = {
-
-        heartRate: Number(req.body.heartRate),
-
-        spo2: Number(req.body.spo2),
-
-        systolicBP: Number(req.body.systolicBP),
-
-        diastolicBP: Number(req.body.diastolicBP),
-
-        glucose: Number(req.body.glucose),
-
-        temperature: Number(req.body.temperature),
-
-        status: req.body.status || "NORMAL",
-
-        timestamp: new Date().toLocaleString()
-
-    };
-
-    history.labels.push(new Date().toLocaleTimeString());
-
-    history.heartRate.push(latest.heartRate);
-
-    history.spo2.push(latest.spo2);
-
-    history.glucose.push(latest.glucose);
-
-    history.temperature.push(latest.temperature);
-
-    // Keep only latest 20 records
-
-    if (history.labels.length > 20) {
-
-        history.labels.shift();
-
-        history.heartRate.shift();
-
-        history.spo2.shift();
-
-        history.glucose.shift();
-
-        history.temperature.shift();
-
-    }
+    console.log("Device connected to:", currentPatient);
 
     res.json({
-
         success: true,
-
-        message: "Sensor Data Received"
-
+        message: "Device connected successfully"
     });
 
 });
 
+
+
+
+// ======================================================
+// RECEIVE SENSOR DATA FROM ESP8266
+// ======================================================
+app.post("/data", async(req,res)=>{
+
+try{
+
+
+console.log("Received Sensor Data:");
+console.log(req.body);
+
+
+// Save patient health data
+
+const data = new HealthData({
+
+userId: currentPatient,
+
+heartRate:Number(req.body.heartRate),
+
+spo2:Number(req.body.spo2),
+
+systolicBP:Number(req.body.systolicBP),
+
+diastolicBP:Number(req.body.diastolicBP),
+
+glucose:Number(req.body.glucose),
+
+status:req.body.status || "NORMAL"
+
+});
+
+
+await data.save();
+
+
+
+// Update latest display
+
+latest = {
+
+heartRate:data.heartRate,
+
+spo2:data.spo2,
+
+systolicBP:data.systolicBP,
+
+diastolicBP:data.diastolicBP,
+
+glucose:data.glucose,
+
+status:data.status,
+
+timestamp:new Date().toLocaleString()
+
+};
+
+
+
+res.json({
+
+success:true,
+
+message:"Sensor Data Saved"
+
+});
+
+
+}
+catch(error){
+
+console.log(error);
+
+
+res.status(500).json({
+
+success:false,
+
+message:error.message
+
+});
+
+
+}
+
+
+});
 // ======================================================
 // GET LATEST SENSOR DATA
 // ======================================================

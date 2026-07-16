@@ -32,7 +32,10 @@ width:95%;
 max-width:950px;
 border:none;
 border-radius:20px;
-overflow:hidden;
+
+overflow-y:auto;
+max-height:90vh;
+
 box-shadow:0 15px 40px rgba(0,0,0,.25);
 
 }
@@ -155,11 +158,89 @@ Secure Patient Login Portal
 
 <h3 class="mb-4 fw-bold">
 
-Patient Login
+Login Portal
 
 </h3>
 
 <form id="loginForm">
+<!-- Login Type -->
+
+<div class="mb-3">
+
+<label class="form-label fw-bold">
+Login As
+</label>
+
+<br>
+
+<div class="form-check form-check-inline">
+
+<input
+class="form-check-input"
+type="radio"
+name="loginType"
+value="patient"
+checked>
+
+<label class="form-check-label">
+Patient
+</label>
+
+</div>
+
+<div class="form-check form-check-inline">
+
+<input
+class="form-check-input"
+type="radio"
+name="loginType"
+value="doctor">
+
+<label class="form-check-label">
+Doctor
+</label>
+
+</div>
+
+</div>
+
+<!-- Doctor Login -->
+
+<div id="doctorFields" style="display:none;">
+
+<div class="mb-3">
+
+<label class="form-label">
+Doctor ID
+</label>
+
+<input
+type="text"
+id="doctorId"
+class="form-control"
+placeholder="Enter Doctor ID">
+
+</div>
+
+<div class="mb-4">
+
+<label class="form-label">
+Password
+</label>
+
+<input
+type="password"
+id="password"
+class="form-control"
+placeholder="Enter Password">
+
+</div>
+
+</div>
+
+<!-- Patient Login -->
+
+<div id="patientFields">
 
 <div class="mb-3">
 
@@ -195,6 +276,10 @@ required>
 
 </div>
 
+</div>
+
+
+
 <button class="btn btn-primary w-100">
 
 <span
@@ -207,6 +292,7 @@ Login
 </button>
 
 <a
+id="registerBtn"
 href="/register.html"
 class="btn btn-outline-primary w-100 mt-3">
 
@@ -226,6 +312,42 @@ Register New Patient
 
 <script>
 
+const registerBtn =
+document.getElementById("registerBtn");
+
+const patientFields =
+document.getElementById("patientFields");
+
+const doctorFields =
+document.getElementById("doctorFields");
+
+document
+.querySelectorAll('input[name="loginType"]')
+.forEach(radio=>{
+
+radio.addEventListener("change",()=>{
+
+if(radio.value==="doctor" && radio.checked){
+
+    patientFields.style.display="none";
+    doctorFields.style.display="block";
+
+    registerBtn.style.display="none";
+
+}
+else{
+
+    patientFields.style.display="block";
+    doctorFields.style.display="none";
+
+    registerBtn.style.display="block";
+
+}
+
+});
+
+});
+
 const form=document.getElementById("loginForm");
 
 form.addEventListener("submit",async(e)=>{
@@ -236,13 +358,38 @@ spinner.style.display="inline-block";
 
 message.innerHTML="";
 
-const data={
+const loginType = document.querySelector(
+'input[name="loginType"]:checked'
+).value;
 
-email:email.value,
-phone:phone.value
+let data;
 
-};
+if(loginType==="doctor"){
 
+    data={
+
+        loginType:"doctor",
+
+        doctorId:doctorId.value,
+
+        password:password.value
+
+    };
+
+}
+else{
+
+    data={
+
+        loginType:"patient",
+
+        email:email.value,
+
+        phone:phone.value
+
+    };
+
+}
 try{
 
 const response=await fetch("/api/login",{
@@ -269,11 +416,29 @@ message.innerHTML=
 
 '<div class="alert alert-success">Login Successful... Redirecting</div>';
 
-setTimeout(()=>{
+if(result.role==="doctor"){
 
-window.location.href="/dashboard.html";
+    setTimeout(()=>{
 
-},1200);
+        window.location.href="/doctor.html";
+
+    },1200);
+
+}
+else{
+
+    localStorage.setItem(
+        "userId",
+        result.user._id
+    );
+
+    setTimeout(()=>{
+
+        window.location.href="/dashboard.html";
+
+    },1200);
+
+}
 
 }
 
