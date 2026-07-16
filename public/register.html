@@ -150,6 +150,35 @@
           emergencyContact: emergencyContact.value,
           medicalCondition: medicalCondition.value,
         };
+        
+        // =====================================
+// REGISTER NEW PATIENT
+// =====================================
+app.post("/api/users", async (req, res) => {
+
+    try {
+
+        const user = new User(req.body);
+
+        await user.save();
+
+        res.status(201).json({
+            success: true,
+            message: "Registration Successful",
+            user
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+
+});
+        
         try {
           const r = await fetch("/api/users", {
             method: "POST",
