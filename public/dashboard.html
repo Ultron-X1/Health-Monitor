@@ -757,13 +757,14 @@ document.getElementById("patientName").textContent =
 
 }
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
+ document.getElementById("logoutBtn").addEventListener("click", () => {
 
     localStorage.clear();
 
     window.location.href = "/login.html";
 
 });
+
 // Poll every 3 seconds
 poll();
 setInterval(poll, 3000);
