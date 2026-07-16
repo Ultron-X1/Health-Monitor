@@ -1,133 +1,115 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Select Patient</title>
+<title>Doctor Dashboard</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
 
-
 <body class="bg-light">
-
 
 <div class="container mt-5">
 
-<h2>
-Patient Monitoring Control
-</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<!-- Patient Management Section -->
+<h2>Patient Monitoring Control</h2>
 
-<div class="container mt-4">
+<button class="btn btn-danger" onclick="logout()">
+Logout
+</button>
 
-<h2 class="mb-4">
-Registered Patients
-</h2>
+</div>
 
+<h4 class="mb-3">Registered Patients</h4>
 
 <div id="patientList" class="row">
 
-<!-- Patients will load here -->
-
 </div>
 
-
-</div>
+<hr>
 
 <select id="patients" class="form-control mt-3">
 
-<option>
-Loading patients...
-</option>
+<option>Loading patients...</option>
 
 </select>
 
-
-<button 
-class="btn btn-primary mt-3"
+<button
+class="btn btn-success mt-3"
 onclick="startMonitoring()">
 
 Start Monitoring
 
 </button>
 
-
-<p id="message"></p>
-
+<p id="message" class="mt-3"></p>
 
 </div>
 
-
-
 <script>
 
+// ============================
+// LOGOUT
+// ============================
 
+function logout(){
 
-async function startMonitoring(){
+    localStorage.clear();
 
-
-let patientId =
-document.getElementById("patients").value;
-
-
-
-await fetch("/api/device/connect",
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-userId:patientId
-
-})
-
-
-});
-
-
-
-document.getElementById("message").innerHTML =
-"Patient connected to monitor";
-
+    window.location.href="/login.html";
 
 }
 
+// ============================
+// START MONITORING
+// ============================
 
+async function startMonitoring(){
 
+    let patientId=document.getElementById("patients").value;
 
+    await fetch("/api/device/connect",{
 
-// =======================================
-// LOAD REGISTERED PATIENTS
-// =======================================
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+            userId:patientId
+        })
+
+    });
+
+    document.getElementById("message").innerHTML=
+    "<span class='text-success'>Patient connected successfully.</span>";
+
+}
+
+// ============================
+// LOAD PATIENTS
+// ============================
 
 async function loadPatients(){
 
 try{
 
-const response = await fetch("/api/users");
+const response=await fetch("/api/users");
 
-const users = await response.json();
+const users=await response.json();
 
-const patientList = document.getElementById("patientList");
+const patientList=document.getElementById("patientList");
 
-const select = document.getElementById("patients");
+const select=document.getElementById("patients");
 
-
-patientList.innerHTML = "";
-
-select.innerHTML = "";
-
+patientList.innerHTML="";
+select.innerHTML="";
 
 users.forEach(user=>{
 
-
-select.innerHTML += `
+select.innerHTML+=`
 
 <option value="${user._id}">
 ${user.fullName}
@@ -135,8 +117,7 @@ ${user.fullName}
 
 `;
 
-
-patientList.innerHTML += `
+patientList.innerHTML+=`
 
 <div class="col-md-4 mb-3">
 
@@ -144,23 +125,31 @@ patientList.innerHTML += `
 
 <div class="card-body">
 
-<h5 class="card-title">
-${user.fullName}
-</h5>
+<h5>${user.fullName}</h5>
 
-<p>Email: ${user.email}</p>
+<p><strong>Email:</strong> ${user.email}</p>
 
-<p>Phone: ${user.phone}</p>
+<p><strong>Phone:</strong> ${user.phone}</p>
 
+<div class="d-flex gap-2">
 
-<button 
-class="btn btn-primary"
+<button
+class="btn btn-primary btn-sm"
 onclick="connectDevice('${user._id}')">
 
 Connect Device
 
 </button>
 
+<button
+class="btn btn-danger btn-sm"
+onclick="removePatient('${user._id}')">
+
+Remove
+
+</button>
+
+</div>
 
 </div>
 
@@ -172,98 +161,105 @@ Connect Device
 
 });
 
-
-} // closes try
-
-
-catch(error){
+}catch(error){
 
 console.log(error);
 
 }
 
-
-} // closes loadPatients function
+}
 
 loadPatients();
 
-async function connectDevice(userId){
+// ============================
+// CONNECT DEVICE
+// ============================
 
+async function connectDevice(userId){
 
 try{
 
-
-const response = await fetch(
-"/api/device/connect",
-{
+const response=await fetch("/api/device/connect",{
 
 method:"POST",
 
 headers:{
-
 "Content-Type":"application/json"
-
 },
 
 body:JSON.stringify({
-
 userId:userId
-
 })
 
-}
+});
 
-);
-
-
-
-const result = await response.json();
-
-
+const result=await response.json();
 
 if(result.success){
 
+alert("Device connected successfully.");
 
-alert(
-"Device connected successfully"
-);
+}else{
 
-
-}
-
-else{
-
-
-alert(
-"Unable to connect device"
-);
-
+alert("Unable to connect device.");
 
 }
 
-
-}
-
-catch(error){
-
+}catch(error){
 
 console.log(error);
 
-
-alert(
-"Server connection error"
-);
-
+alert("Server connection error.");
 
 }
 
+}
+
+// ============================
+// REMOVE PATIENT
+// ============================
+
+async function removePatient(userId){
+
+if(!confirm("Are you sure you want to remove this patient?")){
+
+return;
 
 }
 
-  
+try{
+
+const response=await fetch(`/api/users/${userId}`,{
+
+method:"DELETE"
+
+});
+
+const result=await response.json();
+
+if(result.success){
+
+alert("Patient removed successfully.");
+
+loadPatients();
+
+}else{
+
+alert(result.message);
+
+}
+
+}catch(error){
+
+console.log(error);
+
+alert("Server connection error.");
+
+}
+
+}
 
 </script>
-
 
 </body>
 </html>
