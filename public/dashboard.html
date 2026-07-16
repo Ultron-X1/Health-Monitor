@@ -283,6 +283,7 @@
     </div>
   </div>
   <div class="header-right">
+    <button id="logoutBtn">Logout</button>
     <div class="status-badge">
       <div class="status-dot" id="conn-dot"></div>
       <span id="conn-text">Connecting...</span>
@@ -550,6 +551,7 @@ function statusEl(id, isNormal) {
 }
 
 function updateDashboard(data) {
+  if (!data || data.success === false) return;
   const hr   = data.heartRate;
   const sp   = data.spo2;
   const sys  = data.systolicBP;
@@ -628,51 +630,101 @@ function updateDashboard(data) {
     new Date(data.timestamp).toLocaleTimeString();
 }
 
-function updateCharts(history) {
-  const labels = history.labels || [];
+function updateCharts(history){
 
-  hrChart.data.labels              = labels;
-  hrChart.data.datasets[0].data   = history.heartRate || [];
-  hrChart.update('none');
+    const labels = history.map(item =>
+        new Date(item.createdAt).toLocaleTimeString()
+    );
 
-  spo2Chart.data.labels            = labels;
-  spo2Chart.data.datasets[0].data = history.spo2 || [];
-  spo2Chart.update('none');
+    hrChart.data.labels = labels;
+    hrChart.data.datasets[0].data =
+        history.map(item=>item.heartRate);
+    hrChart.update();
 
-  bpChart.data.labels              = labels;
-  bpChart.data.datasets[0].data   = history.systolicBP  || [];
-  bpChart.data.datasets[1].data   = history.diastolicBP || [];
-  bpChart.update('none');
+    spo2Chart.data.labels = labels;
+    spo2Chart.data.datasets[0].data =
+        history.map(item=>item.spo2);
+    spo2Chart.update();
 
-  gluChart.data.labels             = labels;
-  gluChart.data.datasets[0].data  = history.glucose || [];
-  gluChart.update('none');
+    bpChart.data.labels = labels;
+
+    bpChart.data.datasets[0].data =
+        history.map(item=>item.systolicBP);
+
+    bpChart.data.datasets[1].data =
+        history.map(item=>item.diastolicBP);
+
+    bpChart.update();
+
+    gluChart.data.labels = labels;
+
+    gluChart.data.datasets[0].data =
+        history.map(item=>item.glucose);
+
+    gluChart.update();
+
 }
 
 // ── Poll server ────────────────────────────────────────────
 let retries = 0;
 
 async function poll() {
-  try {
-    const [latestRes, historyRes] = await Promise.all([
-      fetch('/api/latest'),
-      fetch('/api/history')
-    ]);
-    const latest  = await latestRes.json();
-    const history = await historyRes.json();
-    updateDashboard(latest);
-    updateCharts(history);
-    retries = 0;
-  } catch(e) {
-    retries++;
-    if(retries > 3) {
-      document.getElementById('conn-dot').className   = 'status-dot';
-      document.getElementById('conn-text').textContent = 'Reconnecting...';
+
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+
+        window.location.href = "/login.html";
+        return;
+
     }
-    console.warn('Poll failed:', e.message);
-  }
+
+    try {
+
+        const [latestRes, historyRes] = await Promise.all([
+
+            fetch(`/api/latest/${userId}`),
+
+            fetch(`/api/history/${userId}`)
+
+        ]);
+
+        const latest = await latestRes.json();
+        const history = await historyRes.json();
+
+        updateDashboard(latest);
+
+        updateCharts(history);
+
+        retries = 0;
+
+    }
+
+    catch(e){
+
+        retries++;
+
+        if(retries>3){
+
+            document.getElementById("conn-dot").className="status-dot";
+
+            document.getElementById("conn-text").textContent="Disconnected";
+
+        }
+
+        console.log(e);
+
+    }
+
 }
 
+  document.getElementById("logoutBtn").onclick = ()=>{
+
+    localStorage.removeItem("userId");
+
+    window.location.href="/login.html";
+
+}
 // Poll every 3 seconds
 poll();
 setInterval(poll, 3000);
