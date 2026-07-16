@@ -454,11 +454,8 @@ Logout
 
   const patientName = localStorage.getItem("userName");
 
-if(patientName){
-
-    document.getElementById("patientName").innerHTML = patientName;
-
-}
+document.getElementById("patientName").textContent =
+patientName || "Unknown Patient";
 
   const today = new Date();
 
@@ -741,30 +738,13 @@ async function poll() {
 
 }
 
-  document.getElementById("logoutBtn").onclick = () => {
-
-    localStorage.removeItem("userId");
-    localStorage.removeItem("fullName");
-
-    window.location.href = "/login.html";
-
-};
-
-  const patientName = localStorage.getItem("userName");
-
-document.getElementById("patientName").textContent =
-    patientName || "Unknown Patient";
-
-}
-
- document.getElementById("logoutBtn").addEventListener("click", () => {
+ document.getElementById("logoutBtn").addEventListener("click", function () {
 
     localStorage.clear();
 
     window.location.href = "/login.html";
 
 });
-
 // Poll every 3 seconds
 poll();
 setInterval(poll, 3000);
