@@ -69,6 +69,14 @@ async function startMonitoring() {
 
     try {
 
+        Swal.fire({
+            title: "Connecting...",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const response = await fetch("/api/device/connect", {
             method: "POST",
             headers: {
@@ -81,15 +89,21 @@ async function startMonitoring() {
 
         const result = await response.json();
 
-        if(result.success){
+        if (result.success) {
 
-            document.getElementById("message").innerHTML =
-            "<span class='text-success'>Patient connected successfully.</span>";
+            Swal.fire({
+                icon: "success",
+                title: "Connected",
+                text: "Patient connected successfully."
+            });
 
-        }else{
+        } else {
 
-            document.getElementById("message").innerHTML =
-            "<span class='text-danger'>Unable to connect patient.</span>";
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: "Unable to connect patient."
+            });
 
         }
 
@@ -97,7 +111,11 @@ async function startMonitoring() {
 
         console.log(err);
 
-        alert("Server Error");
+        Swal.fire({
+            icon: "error",
+            title: "Server Error",
+            text: "Unable to connect to server."
+        });
 
     }
 
@@ -145,16 +163,16 @@ async function loadPatients() {
                         <div class="d-grid gap-2">
 
                             <button
-                            class="btn btn-primary"
-                            onclick="connectDevice('${user._id}')">
+                                class="btn btn-primary"
+                                onclick="connectDevice('${user._id}')">
 
                                 Connect Device
 
                             </button>
 
                             <button
-                            class="btn btn-danger"
-                            onclick="removePatient('${user._id}')">
+                                class="btn btn-danger"
+                                onclick="removePatient('${user._id}')">
 
                                 Remove User
 
@@ -176,7 +194,11 @@ async function loadPatients() {
 
         console.log(error);
 
-        alert("Unable to load patients.");
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Unable to load patients."
+        });
 
     }
 
@@ -187,22 +209,17 @@ loadPatients();
 // ============================
 // CONNECT DEVICE
 // ============================
+
 async function connectDevice(userId){
 
     try{
 
         Swal.fire({
-
             title:"Connecting Device...",
-
             allowOutsideClick:false,
-
             didOpen:()=>{
-
                 Swal.showLoading();
-
             }
-
         });
 
         const response = await fetch("/api/device/connect",{
@@ -224,25 +241,17 @@ async function connectDevice(userId){
         if(result.success){
 
             Swal.fire({
-
                 icon:"success",
-
                 title:"Connected",
-
-                text:"Device connected successfully"
-
+                text:"Device connected successfully."
             });
 
         }else{
 
             Swal.fire({
-
                 icon:"error",
-
                 title:"Failed",
-
-                text:"Unable to connect device"
-
+                text:"Unable to connect device."
             });
 
         }
@@ -252,18 +261,13 @@ async function connectDevice(userId){
         console.log(error);
 
         Swal.fire({
-
             icon:"error",
-
             title:"Server Error",
-
-            text:"Unable to connect to server"
-
+            text:"Unable to connect to server."
         });
 
     }
 
-}
 }
 
 // ============================
@@ -272,25 +276,25 @@ async function connectDevice(userId){
 
 async function removePatient(userId){
 
-    const result = await Swal.fire({
+    const confirmDelete = await Swal.fire({
 
-    title: "Remove Patient?",
+        title:"Remove Patient?",
 
-    text: "This action cannot be undone.",
+        text:"This action cannot be undone.",
 
-    icon: "warning",
+        icon:"warning",
 
-    showCancelButton: true,
+        showCancelButton:true,
 
-    confirmButtonText: "Remove",
+        confirmButtonColor:"#dc3545",
 
-    cancelButtonText: "Cancel",
+        confirmButtonText:"Yes, Remove",
 
-    confirmButtonColor: "#dc3545"
+        cancelButtonText:"Cancel"
 
-});
+    });
 
-if(!result.isConfirmed) return;
+    if(!confirmDelete.isConfirmed) return;
 
     try{
 
@@ -302,13 +306,21 @@ if(!result.isConfirmed) return;
 
         if(result.success){
 
-            alert("Patient removed successfully.");
+            Swal.fire({
+                icon:"success",
+                title:"Removed",
+                text:"Patient removed successfully."
+            });
 
             loadPatients();
 
         }else{
 
-            alert(result.message || "Unable to remove patient.");
+            Swal.fire({
+                icon:"error",
+                title:"Failed",
+                text:result.message || "Unable to remove patient."
+            });
 
         }
 
@@ -316,12 +328,15 @@ if(!result.isConfirmed) return;
 
         console.log(error);
 
-        alert("Server connection error.");
+        Swal.fire({
+            icon:"error",
+            title:"Server Error",
+            text:"Unable to connect to server."
+        });
 
     }
 
 }
-
 </script>
 
 </body>
