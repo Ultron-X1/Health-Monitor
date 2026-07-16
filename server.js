@@ -36,6 +36,27 @@ app.get("/dashboard", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
 
+app.delete("/api/users/:id", async (req, res) => {
+
+    try {
+
+        await User.findByIdAndDelete(req.params.id);
+
+        res.json({
+            success: true
+        });
+
+    } catch (err) {
+
+        res.json({
+            success: false,
+            message: "Unable to delete patient"
+        });
+
+    }
+
+});
+
 // ===============================
 // Register Patient
 // ===============================
