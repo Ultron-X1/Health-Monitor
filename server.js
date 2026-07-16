@@ -114,20 +114,44 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-       app.post("/api/login", async (req, res) => {
+     // =====================================
+// LOGIN (Doctor & Patient)
+// =====================================
+app.post("/api/login", async (req, res) => {
+
     try {
+
+        console.log(req.body);
 
         const { loginType } = req.body;
 
+        // Doctor Login
         if (loginType === "doctor") {
-            // doctor login...
+
+            if (
+                req.body.doctorId === "DOCTOR001" &&
+                req.body.password === "Admin123"
+            ) {
+
+                return res.json({
+                    success: true,
+                    role: "doctor"
+                });
+
+            }
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid Doctor ID or Password"
+            });
+
         }
 
         // Patient Login
         const { email, phone } = req.body;
 
-        console.log("Email received:", email);
-        console.log("Phone received:", phone);
+        console.log("Email:", email);
+        console.log("Phone:", phone);
 
         const user = await User.findOne({
             email,
@@ -137,10 +161,12 @@ app.post("/api/login", async (req, res) => {
         console.log("User found:", user);
 
         if (!user) {
+
             return res.status(401).json({
                 success: false,
                 message: "Invalid Email or Phone Number"
             });
+
         }
 
         res.json({
@@ -150,47 +176,12 @@ app.post("/api/login", async (req, res) => {
         });
 
     } catch (err) {
+
+        console.error(err);
+
         res.status(500).json({
             success: false,
             message: err.message
-        });
-    }
-});
-
-app.post("/api/device/connect", (req, res) => {
-
-    const { userId } = req.body;
-
-    currentPatient = userId;
-
-    console.log("Device connected to:", currentPatient);
-
-    res.json({
-        success: true,
-        message: "Device connected successfully"
-    });
-
-});
-
-
-// =====================================
-// GET ALL PATIENTS
-// =====================================
-app.get("/api/users", async (req, res) => {
-
-    try {
-
-        const users = await User.find().sort({ createdAt: -1 });
-
-        res.json(users);
-
-    } catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-            message: err.message
-
         });
 
     }
