@@ -275,13 +275,20 @@
 
 <!-- Header -->
 <header>
-  <div class="logo">
-    <div class="logo-icon">💓</div>
-    <div>
-      <h1>IoT Health Monitor</h1>
-      <p>Diabetes &amp; Blood Pressure Dashboard</p>
-    </div>
-  </div>
+
+<div class="logo">
+
+<div class="logo-icon">💓</div>
+
+<div>
+
+<h1 id="patientName">Loading...</h1>
+
+<p>Patient Health Dashboard</p>
+
+</div>
+
+</div>
   <div class="header-right">
     <button id="logoutBtn">Logout</button>
     <div class="status-badge">
@@ -718,11 +725,20 @@ async function poll() {
 
 }
 
-  document.getElementById("logoutBtn").onclick = ()=>{
+  document.getElementById("logoutBtn").onclick = () => {
 
     localStorage.removeItem("userId");
+    localStorage.removeItem("fullName");
 
-    window.location.href="/login.html";
+    window.location.href = "/login.html";
+
+};
+
+  const patientName = localStorage.getItem("fullName");
+
+if(patientName){
+
+    document.getElementById("patientName").textContent = patientName;
 
 }
 // Poll every 3 seconds
