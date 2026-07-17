@@ -178,6 +178,35 @@ app.post("/api/login", async (req, res) => {
     }
 
 });
+
+
+
+// ===============================
+// Get Patients (Doctor Dashboard)
+// ===============================
+app.get("/api/users", async (req, res) => {
+
+    try {
+
+        const users = await User.find({
+            active: true,
+            hiddenFromDoctor: false
+        }).sort({ createdAt: -1 });
+
+        res.json(users);
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
+
 // ===============================
 // Doctor selects patient
 // ===============================
