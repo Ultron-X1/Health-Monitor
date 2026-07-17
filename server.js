@@ -69,7 +69,8 @@ app.post("/api/users", async (req, res) => {
     try {
 
         const existing = await User.findOne({
-            email: req.body.email
+            email: req.body.email,
+            active: true
         });
 
         if (existing) {
@@ -139,7 +140,7 @@ app.post("/api/login", async (req, res) => {
 
         const user = await User.findOne({
             email,
-            phone
+            phone,
             active: true:
         });
 
