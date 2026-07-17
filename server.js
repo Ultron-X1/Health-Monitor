@@ -38,27 +38,30 @@ app.get("/dashboard", (req, res) => {
 
 app.delete("/api/users/:id", async (req, res) => {
 
-    try {
+    try{
 
-        await User.findByIdAndUpdate(req.params.id, {
-            active: false
+        await User.findByIdAndUpdate(req.params.id,{
+            active:false
         });
 
+        if(currentPatient === req.params.id){
+            currentPatient = null;
+        }
+
         res.json({
-            success: true
+            success:true
         });
 
-    } catch (err) {
+    }catch(err){
 
         res.json({
-            success: false,
-            message: "Unable to remove patient"
+            success:false,
+            message:"Unable to remove patient"
         });
 
     }
 
-});
-// ===============================
+});// ===============================
 // Register Patient
 // ===============================
 app.post("/api/users", async (req, res) => {
