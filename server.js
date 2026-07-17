@@ -156,11 +156,36 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-        res.json({
-            success: true,
-            role: "patient",
-            user
-        });
+        const { email, phone } = req.body;
+
+const user = await User.findOne({
+    email,
+    phone,
+    active: true
+});
+
+if (!user) {
+
+    return res.status(401).json({
+        success: false,
+        message: "Invalid Email or Phone Number"
+    });
+
+}
+
+// Make patient visible again on doctor's dashboard
+if (user.hiddenFromDoctor) {
+
+    user.hiddenFromDoctor = false;
+    await user.save();
+
+}
+
+return res.json({
+    success: true,
+    role: "patient",
+    user
+});
 
     } catch (err) {
 
