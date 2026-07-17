@@ -118,6 +118,7 @@ app.post("/api/login", async (req, res) => {
 
         const { loginType } = req.body;
 
+        // Doctor Login
         if (loginType === "doctor") {
 
             if (
@@ -139,11 +140,12 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-       
+        // Patient Login
+        const { email, phone } = req.body;
 
         const user = await User.findOne({
-            email,
-            phone,
+            email: email,
+            phone: phone,
             active: true
         });
 
@@ -156,19 +158,25 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-        const { email, phone } = req.body;
+        user.hiddenFromDoctor = false;
+        await user.save();
 
+        return res.json({
+            success: true,
+            role: "patient",
+            user
+        });
 
+    } catch (err) {
 
-if (!user) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
 
-    return res.status(401).json({
-        success: false,
-        message: "Invalid Email or Phone Number"
-    });
+    }
 
-}
-
+});
 // Make patient visible again on doctor's dashboard
 if (user.hiddenFromDoctor) {
 
