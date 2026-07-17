@@ -139,7 +139,7 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-        const { email, phone } = req.body;
+       
 
         const user = await User.findOne({
             email,
