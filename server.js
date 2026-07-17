@@ -118,7 +118,6 @@ app.post("/api/login", async (req, res) => {
 
         const { loginType } = req.body;
 
-        // Doctor Login
         if (loginType === "doctor") {
 
             if (
@@ -140,12 +139,11 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-        // Patient Login
         const { email, phone } = req.body;
 
         const user = await User.findOne({
-            email: email,
-            phone: phone,
+            email,
+            phone,
             active: true
         });
 
@@ -158,61 +156,17 @@ app.post("/api/login", async (req, res) => {
 
         }
 
-        user.hiddenFromDoctor = false;
-        await user.save();
+        // Make patient visible again
+        if (user.hiddenFromDoctor) {
+            user.hiddenFromDoctor = false;
+            await user.save();
+        }
 
         return res.json({
             success: true,
             role: "patient",
             user
         });
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    }
-
-});
-// Make patient visible again on doctor's dashboard
-if (user.hiddenFromDoctor) {
-
-    user.hiddenFromDoctor = false;
-    await user.save();
-
-}
-
-return res.json({
-    success: true,
-    role: "patient",
-    user
-});
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    }
-
-});
-
-/// Get patients visible to doctor
-app.get("/api/users", async (req, res) => {
-
-    try {
-
-        const users = await User.find({
-            active: true,
-            hiddenFromDoctor: false
-        }).sort({ createdAt: -1 });
-
-        res.json(users);
 
     } catch (err) {
 
