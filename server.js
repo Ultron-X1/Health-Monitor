@@ -41,7 +41,7 @@ app.delete("/api/users/:id", async (req, res) => {
     try {
 
         await User.findByIdAndUpdate(req.params.id, {
-            active: false
+            hiddenFromDoctor: true
         });
 
         if (currentPatient === req.params.id) {
