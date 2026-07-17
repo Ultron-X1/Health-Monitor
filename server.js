@@ -173,17 +173,15 @@ app.post("/api/login", async (req, res) => {
 
 });
 
-// ===============================
-// Get Active Patients Only
-// ===============================
+/// Get patients visible to doctor
 app.get("/api/users", async (req, res) => {
 
     try {
 
         const users = await User.find({
-            active: true
+            active: true,
+            hiddenFromDoctor: false
         }).sort({ createdAt: -1 });
-
 
         res.json(users);
 
@@ -197,7 +195,6 @@ app.get("/api/users", async (req, res) => {
     }
 
 });
-
 // ===============================
 // Doctor selects patient
 // ===============================
