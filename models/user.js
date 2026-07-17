@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
 
+
+
     fullName: {
         type: String,
         required: true
@@ -46,6 +48,11 @@ const userSchema = new mongoose.Schema({
     active: {
         type: Boolean,
         default: true
+    },
+
+    hiddenFromDoctor: {
+        type: Boolean,
+        default: false
     }
 
 }, {
