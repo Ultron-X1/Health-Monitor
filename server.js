@@ -140,6 +140,7 @@ app.post("/api/login", async (req, res) => {
         const user = await User.findOne({
             email,
             phone
+            active: true:
         });
 
         if (!user) {
